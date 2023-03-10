@@ -51,7 +51,7 @@ for (i in 1:nrow(df)) {
   if (df$type[i] == "Negligible") {
     prob <- neg_prob[week]
     if (runif(1) < prob) {
-      neg_count <- neg_count + 1
+      neg_count <- neg_count + sample(1:3, 1)
     }
   } else if (df$type[i] == "Marginal") {
     prob <- mar_prob[week]
@@ -75,7 +75,32 @@ for (i in 1:nrow(df)) {
   df$cat_count[i] <- cat_count
 }
 
-# Aggregate
+# Reshape the dataframe to long format using gather()
+df_long <- df %>% 
+  select(!c(type)) %>%
+  gather(key = "event_type", value = "count", -date, -week_of_month) 
+
+
+
+df_diff <- df_long %>% 
+  mutate(date = format(date, "%Y-%m")) %>%
+  group_by(event_type) %>% 
+  arrange(date) %>% 
+  mutate(count_diff = count - lag(count, default = 0)) %>%
+  filter(!is.na(count_diff)) %>% 
+  group_by(date, event_type) %>%
+  summarise(sum = sum(count_diff)) %>%
+  ungroup() %>%
+  filter(!date == '2021-03')
+
+ggplot(df_diff, aes(x = date, y = sum, group = event_type)) + 
+  geom_line(size = 1) +
+  scale_y_continuous(breaks = c(0,1,5,10,20,30,40))+
+  #scale_x_date(date_labels = "%b %d") +
+  labs(x = "Monthly Reports", y = "Accumulated Events Submitted")+ 
+  coord_flip()+
+  facet_grid('event_type', 
+              labeller = labeller(event_type=c("neg_count"="Negligible Events", "mar_count" = "Marginal Events", "cri_count" = "Critical Events", "cat_count"="Catastrophic Events")))
 
 
 

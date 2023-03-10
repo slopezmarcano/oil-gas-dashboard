@@ -2,7 +2,7 @@ import os
 from wand.image import Image
 
 #Define the input and output file paths
-input_file = 'outputs/.pdf'
+input_file = 'outputs/dashboard_a.pdf'
 output_dir = ''
 
 #Create the output directory (if it doesn't exist)
